@@ -1,7 +1,7 @@
 Build Python:
   preconditions:
     setup: |
-      from hitchbuildpy import PythonBuild
+      import hitchbuildpy
       import hitchbuild
 
       bundle = hitchbuild.BuildBundle(
@@ -9,7 +9,8 @@ Build Python:
           "db.sqlite"
       )
 
-      bundle['thing'] = PythonBuild("3.5.0")
+      bundle['py3.5.0'] = hitchbuildpy.PythonBuild("3.5.0")
+      bundle['venv3.5.0'] = hitchbuildpy.VirtualenvBuild(bundle['py3.5.0'])
 
     code: |
       bundle.ensure_built()
