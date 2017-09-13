@@ -5,8 +5,7 @@ Build Python:
       import hitchbuild
 
       bundle = hitchbuild.BuildBundle(
-          hitchbuild.BuildPath(build="."),
-          "db.sqlite"
+          hitchbuild.BuildPath(build=".", share="."),
       )
 
       bundle['py3.5.0'] = hitchbuildpy.PythonBuild("3.5.0")

@@ -9,7 +9,7 @@ class PythonBuild(hitchbuild.HitchBuild):
     
     @property
     def basepath(self):
-        return self.path.build.joinpath(self.name)
+        return self.path.share.joinpath(self.name)
     
     @property
     def bin(self):
