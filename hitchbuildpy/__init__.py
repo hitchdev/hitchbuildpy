@@ -5,6 +5,7 @@ import hitchbuild
 
 class PythonBuild(hitchbuild.HitchBuild):
     def __init__(self, version):
+        super(PythonBuild, self).__init__()
         self._version = version
     
     @property
