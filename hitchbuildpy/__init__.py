@@ -10,7 +10,7 @@ class PythonBuild(hitchbuild.HitchBuild):
     
     @property
     def basepath(self):
-        return self.path.share.joinpath(self.name)
+        return self.path.share.joinpath("python{0}".format(self._version))
     
     @property
     def bin(self):
@@ -62,7 +62,9 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
         self.verify()
     
     def verify(self):
-        assert self._requirements['base_python']._version in self.bin.python("--version").output()
+        assert self._requirements['base_python']._version in self.bin.python(
+            "-c", "import sys ; sys.stdout.write(sys.version)"
+        ).output()
         
         
 
