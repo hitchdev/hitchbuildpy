@@ -1,8 +1,8 @@
 from commandlib import run, Command
 import hitchpython
-from hitchstory import StoryCollection, StorySchema, BaseEngine, exceptions
+from hitchstory import StoryCollection, StorySchema, BaseEngine, expected_exception, validate, HitchStoryException
 from hitchrun import expected
-from strictyaml import Str, Map, Optional
+from strictyaml import Str, Map, Optional, Float
 from pathquery import pathq
 import hitchtest
 import hitchdoc
@@ -10,18 +10,20 @@ from commandlib import python
 from hitchrun import hitch_maintenance
 from hitchrun import DIR
 from hitchrunpy import ExamplePythonCode, ExpectedExceptionMessageWasDifferent
+from templex import Templex, NonMatching
 
 
 class Engine(BaseEngine):
     """Python engine for running tests."""
 
     schema = StorySchema(
-        preconditions=Map({
+        given={
             Optional("runner python version"): Str(),
             Optional("working python version"): Str(),
             Optional("setup"): Str(),
             Optional("code"): Str(),
-        }),
+            Optional("requirements1.txt"): Str(),
+        },
     )
 
     def __init__(self, paths, settings):
@@ -33,21 +35,20 @@ class Engine(BaseEngine):
         self.path.state = self.path.gen.joinpath("state")
         self.path.working_dir = self.path.gen.joinpath("working")
 
-        self.doc = hitchdoc.Recorder(
-            hitchdoc.HitchStory(self),
-            self.path.gen.joinpath('storydb.sqlite'),
-        )
-
         if self.path.state.exists():
             self.path.state.rmtree(ignore_errors=True)
         self.path.state.mkdir()
+        
+        for filename in ["requirements1.txt"]:
+            if filename in self.given:
+                self.path.state.joinpath(filename).write_text(self.given[filename])
 
         if self.path.working_dir.exists():
             self.path.working_dir.rmtree(ignore_errors=True)
         self.path.working_dir.mkdir()
 
         self.python_package = hitchpython.PythonPackage(
-            self.preconditions.get('python_version', '3.5.0')
+            self.given.get('python_version', '3.5.0')
         )
         self.python_package.build()
 
@@ -66,13 +67,20 @@ class Engine(BaseEngine):
                 self.pip("install", ".").in_dir(self.path.project).run()
 
         self.example_python_code = ExamplePythonCode(
-            self.preconditions.get('code', '')
+            self.given.get('code', '')
         ).with_setup_code(
-            self.preconditions.get('setup')
+            self.given.get('setup')
         )
 
     def run_code(self):
-        self.example_python_code.run(self.path.state, self.python)
+        self.result = self.example_python_code.run(self.path.state, self.python)
+
+    @expected_exception(NonMatching)
+    def output_ends_with(self, contents):
+        Templex(contents).assert_match(self.result.output.split('\n')[-1])
+    
+    def write_file(self, filename, contents):
+        self.path.state.joinpath(filename).write_text(contents)
 
     def raises_exception(self, message=None, exception_type=None):
         try:
@@ -86,38 +94,39 @@ class Engine(BaseEngine):
 
     def file_contains(self, filename, contents):
         assert self.path.working_dir.joinpath(filename).bytes().decode('utf8') == contents
+    
+    @validate(duration=Float())
+    def sleep(self, duration):
+        import time
+        time.sleep(duration)
 
     def pause(self, message="Pause"):
         import IPython
         IPython.embed()
 
-    def on_success(self):
-        if self.settings.get("rewrite"):
-            self.new_story.save()
+    #def on_success(self):
+        #if self.settings.get("rewrite"):
+            #self.new_story.save()
 
 
-@expected(exceptions.HitchStoryException)
-def tdd(*words):
+@expected(HitchStoryException)
+def bdd(*words):
     """
-    Run test with words.
+    Run story with words.
     """
-    print(
-        StoryCollection(
-            pathq(DIR.key).ext("story"), Engine(DIR, {"rewrite": True})
-        ).shortcut(*words).play().report()
-    )
+    StoryCollection(
+        pathq(DIR.key).ext("story"), Engine(DIR, {"rewrite": True})
+    ).shortcut(*words).play()
 
 
-@expected(exceptions.HitchStoryException)
+@expected(HitchStoryException)
 def testfile(filename):
     """
     Run all stories in filename 'filename'.
     """
-    print(
-        StoryCollection(
-            pathq(DIR.key).ext("story"), Engine(DIR, {"rewrite": True})
-        ).in_filename(filename).ordered_by_name().play().report()
-    )
+    StoryCollection(
+        pathq(DIR.key).ext("story"), Engine(DIR, {"rewrite": True})
+    ).in_filename(filename).ordered_by_name().play()
 
 
 def regression():
@@ -200,24 +209,3 @@ def deploy(version):
     python(
         "-m", "twine", "upload", "dist/{0}-{1}.tar.gz".format(NAME, version)
     ).in_dir(DIR.project).run()
-
-
-def docgen():
-    """
-    Generate documentation.
-    """
-    docpath = DIR.project.joinpath("docs")
-
-    if not docpath.exists():
-        docpath.mkdir()
-
-    documentation = hitchdoc.Documentation(
-        DIR.gen.joinpath('storydb.sqlite'),
-        'doctemplates.yml'
-    )
-
-    for story in documentation.stories:
-        story.write(
-            "rst",
-            docpath.joinpath("{0}.rst".format(story.slug))
-        )

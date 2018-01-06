@@ -1,7 +1,8 @@
 hitchpython
 hitchrunpy
-hitchstory
+hitchstory>=0.8.0
 hitchrun
+templex
 kaching
 hitchdoc
 templex

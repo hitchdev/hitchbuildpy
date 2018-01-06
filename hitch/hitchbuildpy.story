@@ -1,7 +1,7 @@
 hitchbuildpy:
-  preconditions:
+  given:
     runner python version: (( runner python version ))
     working python version: (( working python version ))
-  params:
+  with:
     runner python version: 3.5.0
     working python version: 3.5.0
