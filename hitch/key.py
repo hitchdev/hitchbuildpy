@@ -2,7 +2,7 @@ from commandlib import run, Command
 import hitchpython
 from hitchstory import StoryCollection, StorySchema, BaseEngine, expected_exception, validate, HitchStoryException
 from hitchrun import expected
-from strictyaml import Str, Map, Optional, Float
+from strictyaml import Str, Map, MapPattern, Optional, Float
 from pathquery import pathq
 import hitchtest
 import hitchdoc
@@ -22,7 +22,7 @@ class Engine(BaseEngine):
             Optional("working python version"): Str(),
             Optional("setup"): Str(),
             Optional("code"): Str(),
-            Optional("requirements1.txt"): Str(),
+            Optional("files"): MapPattern(Str(), Str()),
         },
     )
 
@@ -39,9 +39,8 @@ class Engine(BaseEngine):
             self.path.state.rmtree(ignore_errors=True)
         self.path.state.mkdir()
         
-        for filename in ["requirements1.txt"]:
-            if filename in self.given:
-                self.path.state.joinpath(filename).write_text(self.given[filename])
+        for filename, contents in self.given.get('files', {}).items():
+            self.path.state.joinpath(filename).write_text(contents)
 
         if self.path.working_dir.exists():
             self.path.working_dir.rmtree(ignore_errors=True)

@@ -1,9 +1,13 @@
-Build Pyenv:
+Build python:
   given:
     setup: |
       import hitchbuildpy
 
       pyenv = hitchbuildpy.PyenvBuild("3.5.0").with_build_path(".")
+
+Build pyenv:
+  based on: build python
+  given:
     code: |
       pyenv.ensure_built()
       assert "3.5.0" in pyenv.bin.python("--version").output()
@@ -11,13 +15,37 @@ Build Pyenv:
   - Run code
 
 Build virtualenv:
-  based on: build pyenv
+  based on: build python
   given:
     code: |
       virtualenv = hitchbuildpy.VirtualenvBuild(pyenv, name="venv").with_build_path(".")
       virtualenv.ensure_built()
       assert "3.5.0" in virtualenv.bin.python("--version").output()
+  steps:
+  - Run code
 
+Build virtualenv from requirements.txt:
+  based on: build python
+  given:
+    files:
+      reqs.txt: |
+        humanize
+    code: |
+      virtualenv = hitchbuildpy.VirtualenvBuild(pyenv, name="venv")\
+                               .with_requirementstxt("reqs.txt")\
+                               .with_build_path(".")
+      virtualenv.ensure_built()
+      assert "now" in virtualenv.bin.python(
+          "-c",
+          (
+              "import humanize ; "
+              "import datetime ; "
+              "print(humanize.naturaltime(datetime.datetime.now()))"
+          )
+      ).output()
+  steps:
+  - Run code
+  
 #Install from requirements.txt:
   #preconditions:
     #setup: |

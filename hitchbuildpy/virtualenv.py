@@ -8,6 +8,7 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
     def __init__(self, base_python, name=None):
         self.base_python = self.as_dependency(base_python)
         self._name = name
+        self._requirementstxt = None
 
     @property
     def name(self):
@@ -23,6 +24,11 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
 
     def trigger(self):
         return self.monitor.non_existent(self.basepath)
+    
+    def with_requirementstxt(self, path):
+        new_venv = copy(self)
+        new_venv._requirementstxt = path
+        return new_venv
 
     def build(self):
         if self.basepath.exists():
@@ -30,6 +36,9 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
         self.basepath.mkdir()
         self.base_python.bin.virtualenv(self.basepath).run()
         self.verify()
+        
+        if self._requirementstxt is not None:
+            self.bin.pip("install", "-r", self._requirementstxt).run()
 
     def verify(self):
         assert self.base_python.version in self.bin.python(
