@@ -65,14 +65,13 @@ class Engine(BaseEngine):
                 self.pip("uninstall", "hitchbuildpy", "-y").ignore_errors().run()
                 self.pip("install", ".").in_dir(self.path.project).run()
 
-        self.example_python_code = ExamplePythonCode(
-            self.given.get('code', '')
-        ).with_setup_code(
-            self.given.get('setup')
-        )
+        self.example_py_code = ExamplePythonCode(self.python, self.path.state)\
+            .with_setup_code(self.given.get('setup', ''))\
+            .with_terminal_size(160, 100)\
 
-    def run_code(self):
-        self.result = self.example_python_code.run(self.path.state, self.python)
+
+    def run(self, code):
+        self.example_py_code.with_code(code).run()
 
     @expected_exception(NonMatching)
     def output_ends_with(self, contents):

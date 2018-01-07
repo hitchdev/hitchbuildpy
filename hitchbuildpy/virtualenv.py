@@ -23,7 +23,10 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
         return self.build_path.joinpath(self.name)
 
     def trigger(self):
-        return self.monitor.non_existent(self.basepath)
+        trig = self.monitor.non_existent(self.basepath)
+        if self._requirementstxt is not None:
+            trig = trig | self.monitor.is_modified([self._requirementstxt,])
+        return trig
     
     def with_requirementstxt(self, path):
         new_venv = copy(self)

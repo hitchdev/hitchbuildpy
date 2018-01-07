@@ -1,5 +1,5 @@
 hitchpython
-hitchrunpy
+hitchrunpy>=0.5.0
 hitchstory>=0.8.0
 hitchrun
 templex
