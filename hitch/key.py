@@ -1,11 +1,11 @@
+from hitchstory import StoryCollection, StorySchema, BaseEngine
+from hitchstory import expected_exception, validate, HitchStoryException
+from hitchrun import expected
+from strictyaml import Str, MapPattern, Optional, Float
+from pathquery import pathq
 from commandlib import run, Command
 import hitchpython
-from hitchstory import StoryCollection, StorySchema, BaseEngine, expected_exception, validate, HitchStoryException
-from hitchrun import expected
-from strictyaml import Str, Map, MapPattern, Optional, Float
-from pathquery import pathq
 import hitchtest
-import hitchdoc
 from commandlib import python
 from hitchrun import hitch_maintenance
 from hitchrun import DIR
@@ -38,7 +38,7 @@ class Engine(BaseEngine):
         if self.path.state.exists():
             self.path.state.rmtree(ignore_errors=True)
         self.path.state.mkdir()
-        
+
         for filename, contents in self.given.get('files', {}).items():
             self.path.state.joinpath(filename).write_text(contents)
 
@@ -76,7 +76,7 @@ class Engine(BaseEngine):
     @expected_exception(NonMatching)
     def output_ends_with(self, contents):
         Templex(contents).assert_match(self.result.output.split('\n')[-1])
-    
+
     def write_file(self, filename, contents):
         self.path.state.joinpath(filename).write_text(contents)
 
@@ -92,7 +92,7 @@ class Engine(BaseEngine):
 
     def file_contains(self, filename, contents):
         assert self.path.working_dir.joinpath(filename).bytes().decode('utf8') == contents
-    
+
     @validate(duration=Float())
     def sleep(self, duration):
         import time
@@ -101,10 +101,6 @@ class Engine(BaseEngine):
     def pause(self, message="Pause"):
         import IPython
         IPython.embed()
-
-    #def on_success(self):
-        #if self.settings.get("rewrite"):
-            #self.new_story.save()
 
 
 @expected(HitchStoryException)

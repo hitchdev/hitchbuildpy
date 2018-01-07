@@ -1,5 +1,4 @@
-from commandlib import CommandPath, Command
-from path import Path
+from commandlib import CommandPath
 from copy import copy
 import hitchbuild
 
@@ -25,9 +24,9 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
     def trigger(self):
         trig = self.monitor.non_existent(self.basepath)
         if self._requirementstxt is not None:
-            trig = trig | self.monitor.is_modified([self._requirementstxt,])
+            trig = trig | self.monitor.is_modified([self._requirementstxt, ])
         return trig
-    
+
     def with_requirementstxt(self, path):
         new_venv = copy(self)
         new_venv._requirementstxt = path
@@ -39,7 +38,7 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
         self.basepath.mkdir()
         self.base_python.bin.virtualenv(self.basepath).run()
         self.verify()
-        
+
         if self._requirementstxt is not None:
             self.bin.pip("install", "-r", self._requirementstxt).run()
 
