@@ -40,7 +40,10 @@ class Engine(BaseEngine):
         self.path.state.mkdir()
 
         for filename, contents in self.given.get('files', {}).items():
-            self.path.state.joinpath(filename).write_text(contents)
+            filepath = self.path.state.joinpath(filename)
+            if not filepath.dirname().exists():
+                filepath.dirname().makedirs()
+            filepath.write_text(contents)
 
         if self.path.working_dir.exists():
             self.path.working_dir.rmtree(ignore_errors=True)

@@ -1,22 +1,25 @@
 Project virtualenv:
-  description: |
-    Build a project based virtualenv for something like Django.
   based on: build python
+  description: |
+    Build a project based virtualenv to run something like Django.
   given:
     files:
-      reqs.txt: |
+      reqs1.txt: |
         python-slugify==1.2.2
+      reqs2.txt: |
+        humanize==0.5.0
     setup: |
       import hitchbuildpy
 
       pyenv = hitchbuildpy.PyenvBuild("3.5.0").with_build_path(".")
 
       virtualenv = hitchbuildpy.VirtualenvBuild(pyenv, name="venv")\
-                               .with_requirementstxt("reqs.txt")\
+                               .with_requirementstxt("reqs1.txt", "reqs2.txt")\
                                .with_build_path(".")
-      virtualenv.ensure_built()
   steps:
   - Run: |
+      virtualenv.ensure_built()
+      
       assert "1.2.2" in virtualenv.bin.python(
           "-c",
           "import slugify ; print(slugify.__version__)"
@@ -27,11 +30,18 @@ Project virtualenv:
           "import slugify ; print(slugify.slugify('TEST me'))"
       ).output()
 
+      assert "12.3 billion" in virtualenv.bin.python(
+          "-c",
+          "import humanize ; print(humanize.intword(12345591313))"
+      ).output()
+
   - Write file:
-      filename: reqs.txt
+      filename: reqs1.txt
       contents: python-slugify==1.2.3
 
   - Run: |
+      virtualenv.ensure_built()
+      
       version = virtualenv.bin.python(
           "-c",
           "import slugify ; print(slugify.__version__)"

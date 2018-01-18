@@ -24,25 +24,49 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
     def trigger(self):
         trig = self.monitor.non_existent(self.basepath)
         if self._requirementstxt is not None:
-            trig = trig | self.monitor.is_modified([self._requirementstxt, ])
+            trig = trig | self.monitor.is_modified(self._requirementstxt)
         return trig
 
-    def with_requirementstxt(self, path):
+    def with_requirementstxt(self, *paths):
         new_venv = copy(self)
-        new_venv._requirementstxt = path
+        new_venv._requirementstxt = paths
         return new_venv
-
-    def build(self):
+    
+    def clean(self):
         if self.basepath.exists():
             self.basepath.rmtree(ignore_errors=True)
+
+    def build(self):
+        self.clean()
         self.basepath.mkdir()
         self.base_python.bin.virtualenv(self.basepath).run()
         self.verify()
 
         if self._requirementstxt is not None:
-            self.bin.pip("install", "-r", self._requirementstxt).run()
+            for requirementstxt in self._requirementstxt:
+                self.bin.pip("install", "-r", requirementstxt).run()
 
     def verify(self):
         assert self.base_python.version in self.bin.python(
             "-c", "import sys ; sys.stdout.write(sys.version)"
         ).output()
+
+
+class PyLibrary(VirtualenvBuild):
+    def __init__(self, base_python, module_name, library_src):
+        self.base_python = self.as_dependency(base_python)
+        self._module_name = module_name
+        self._library_src = library_src
+        self._name = module_name
+
+    def trigger(self):
+        trig = self.monitor.non_existent(self.basepath)
+        return trig
+
+    def build(self):
+        if not self.basepath.exists():
+            self.basepath.mkdir()
+            self.base_python.bin.virtualenv(self.basepath).run()
+            self.verify()
+        self.bin.pip("uninstall", "-y", self._module_name).ignore_errors().run()
+        self.bin.pip("install", ".").in_dir(self._library_src).ignore_errors().run()
