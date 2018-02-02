@@ -24,6 +24,9 @@ class Engine(BaseEngine):
             Optional("code"): Str(),
             Optional("files"): MapPattern(Str(), Str()),
         },
+        info={
+            Optional("about"): Str(),
+        }
     )
 
     def __init__(self, paths, settings):

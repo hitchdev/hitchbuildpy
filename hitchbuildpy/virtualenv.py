@@ -8,6 +8,7 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
         self.base_python = self.as_dependency(base_python)
         self._name = name
         self._requirementstxt = None
+        self._packages = None
 
     @property
     def name(self):
@@ -27,11 +28,16 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
             trig = trig | self.monitor.is_modified(self._requirementstxt)
         return trig
 
+    def with_packages(self, *packages):
+        new_venv = copy(self)
+        new_venv._packages = packages
+        return new_venv
+
     def with_requirementstxt(self, *paths):
         new_venv = copy(self)
         new_venv._requirementstxt = paths
         return new_venv
-    
+
     def clean(self):
         if self.basepath.exists():
             self.basepath.rmtree(ignore_errors=True)
@@ -45,6 +51,9 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
         if self._requirementstxt is not None:
             for requirementstxt in self._requirementstxt:
                 self.bin.pip("install", "-r", requirementstxt).run()
+        if self._packages is not None:
+            for package in self._packages:
+                self.bin.pip("install", package).run()
 
     def verify(self):
         assert self.base_python.version in self.bin.python(
