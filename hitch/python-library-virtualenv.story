@@ -1,8 +1,8 @@
 Python Library Source Virtualenv:
-  based on: build python
   description: |
     Build a virtualenv that installs python library source code.
   given:
+    pyenv_version: 3.5.0
     files:
       setup.py: |
         from distutils.core import setup
@@ -23,6 +23,9 @@ Python Library Source Virtualenv:
             return "foo-" + slugify(string)
       venvs/README.txt: Directory containing project virtualenvs
       share/README.txt: Directory containing shared basepythons
+      debugreqs.txt: |
+        # tools for debugging
+        ensure==0.6.2
     setup: |
       import hitchbuildpy
 
@@ -30,7 +33,7 @@ Python Library Source Virtualenv:
           base_python=hitchbuildpy.PyenvBuild("3.5.0").with_build_path("share"),
           module_name="foo",
           library_src="."
-      ).with_build_path("venvs")
+      ).with_requirementstxt("debugreqs.txt").with_build_path("venvs")
   steps:
   - Run: |
       pylibrary.ensure_built()
@@ -42,6 +45,10 @@ Python Library Source Virtualenv:
       assert "foo-test-me" in pylibrary.bin.python(
           "-c", "import foo ; print(foo.fooslugify('TEST me'))"
       ).output()
+      
+      assert pylibrary.bin.python(
+          "-c", "import ensure ; ensure.Ensure(True).is_true()"
+      ).output() == ""
 
   - Write file:
       filename: foo/dofoo.py
@@ -57,3 +64,13 @@ Python Library Source Virtualenv:
       assert "foobar-test-me" in pylibrary.bin.python(
           "-c", "import foo ; print(foo.fooslugify('TEST me'))"
       ).output()
+
+  variations:
+    with python 3:
+      given:
+        pyenv_version: 3.5.0
+        
+    with python 2:
+      given:
+        pyenv_version: 2.7.10
+

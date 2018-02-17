@@ -67,6 +67,8 @@ class PyLibrary(VirtualenvBuild):
         self._module_name = module_name
         self._library_src = library_src
         self._name = module_name
+        self._packages = []
+        self._requirementstxt = []
 
     def trigger(self):
         trig = self.monitor.non_existent(self.basepath)
@@ -77,5 +79,16 @@ class PyLibrary(VirtualenvBuild):
             self.basepath.mkdir()
             self.base_python.bin.virtualenv(self.basepath).run()
             self.verify()
+
+        if self._requirementstxt is not None:
+            if self.last_run.path_changes is None or any(
+                reqstxt for reqstxt in self._requirementstxt
+                if reqstxt in self.last_run.path_changes
+            ):
+                for requirementstxt in self._requirementstxt:
+                    self.bin.pip("install", "-r", requirementstxt).run()
+        if self._packages is not None:
+            for package in self._packages:
+                self.bin.pip("install", package).run()
         self.bin.pip("uninstall", "-y", self._module_name).ignore_errors().run()
-        self.bin.pip("install", ".").in_dir(self._library_src).ignore_errors().run()
+        self.bin.pip("install", ".").in_dir(self._library_src).run()

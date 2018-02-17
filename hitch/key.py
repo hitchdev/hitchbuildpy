@@ -18,11 +18,10 @@ class Engine(BaseEngine):
 
     schema = StorySchema(
         given={
-            Optional("runner python version"): Str(),
-            Optional("working python version"): Str(),
             Optional("setup"): Str(),
             Optional("code"): Str(),
             Optional("files"): MapPattern(Str(), Str()),
+            Optional("pyenv_version"): Str(),
         },
         info={
             Optional("about"): Str(),
@@ -74,6 +73,7 @@ class Engine(BaseEngine):
         self.example_py_code = ExamplePythonCode(self.python, self.path.state)\
             .with_setup_code(self.given.get('setup', ''))\
             .with_terminal_size(160, 100)\
+            .with_long_strings(pyenv_version=self.given.get("pyenv_version"))
 
 
     def run(self, code):

@@ -3,6 +3,7 @@ Project virtualenv:
   description: |
     Build a project based virtualenv to run something like Django.
   given:
+    pyenv_version: 3.5.0
     files:
       reqs1.txt: |
         python-slugify==1.2.2
@@ -11,7 +12,7 @@ Project virtualenv:
     setup: |
       import hitchbuildpy
 
-      pyenv = hitchbuildpy.PyenvBuild("3.5.0").with_build_path(".")
+      pyenv = hitchbuildpy.PyenvBuild(pyenv_version).with_build_path(".")
 
       virtualenv = hitchbuildpy.VirtualenvBuild(pyenv, name="venv")\
                                .with_requirementstxt("reqs1.txt", "reqs2.txt")\

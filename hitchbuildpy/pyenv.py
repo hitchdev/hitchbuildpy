@@ -34,4 +34,8 @@ class PyenvBuild(hitchbuild.HitchBuild):
         self.verify()
 
     def verify(self):
-        assert self.version in self.bin.python("--version").output()
+        assert self.version in self.bin.python("--version").output(), \
+            "'{0}' expected to be found in python --version, got:\n{1}".format(
+                self.version,
+                self.bin.python("--version").output(),
+            )
