@@ -75,7 +75,6 @@ class Engine(BaseEngine):
             .with_terminal_size(160, 100)\
             .with_long_strings(pyenv_version=self.given.get("pyenv_version"))
 
-
     def run(self, code):
         self.example_py_code.with_code(code).run()
 
