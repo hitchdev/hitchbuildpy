@@ -30,10 +30,10 @@ Python Library Source Virtualenv:
       import hitchbuildpy
 
       pylibrary = hitchbuildpy.PyLibrary(
-          base_python=hitchbuildpy.PyenvBuild("3.5.0").with_build_path("share"),
+          base_python=hitchbuildpy.PyenvBuild("3.5.0").with_build_path(share),
           module_name="foo",
           library_src="."
-      ).with_requirementstxt("debugreqs.txt").with_build_path("venvs")
+      ).with_requirementstxt("debugreqs.txt").with_build_path(build_path)
   steps:
   - Run: |
       pylibrary.ensure_built()

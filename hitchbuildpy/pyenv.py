@@ -15,22 +15,24 @@ class PyenvBuild(hitchbuild.HitchBuild):
     def bin(self):
         return CommandPath(self.basepath/"bin")
 
-    def trigger(self):
-        return self.monitor.non_existent(self.basepath)
+    def fingerprint(self):
+        return str(hash(self.version))
+
+    def clean(self):
+        self.basepath.rmtree(ignore_errors=True)
 
     def build(self):
-        if self.basepath.exists():
-            self.basepath.rmtree(ignore_errors=True)
-        self.basepath.mkdir()
+        if not self.basepath.exists():
+            self.basepath.mkdir()
 
-        Command(
-            Path(__file__).dirname().abspath().joinpath("bin", "python-build")
-        )(self.version, self.basepath).run()
+            Command(
+                Path(__file__).dirname().abspath().joinpath("bin", "python-build")
+            )(self.version, self.basepath).run()
 
-        self.bin.easy_install("--upgrade", "setuptools").run()
-        self.bin.easy_install("--upgrade", "pip").run()
-        self.bin.pip("install", "virtualenv", "--upgrade")\
-                .without_env("PIP_REQUIRE_VIRTUALENV").run()
+            self.bin.easy_install("--upgrade", "setuptools").run()
+            self.bin.easy_install("--upgrade", "pip").run()
+            self.bin.pip("install", "virtualenv", "--upgrade")\
+                    .without_env("PIP_REQUIRE_VIRTUALENV").run()
         self.verify()
 
     def verify(self):

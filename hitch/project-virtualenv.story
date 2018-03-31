@@ -12,11 +12,11 @@ Project virtualenv:
     setup: |
       import hitchbuildpy
 
-      pyenv = hitchbuildpy.PyenvBuild(pyenv_version).with_build_path(".")
+      pyenv = hitchbuildpy.PyenvBuild(pyenv_version).with_build_path(share)
 
       virtualenv = hitchbuildpy.VirtualenvBuild(pyenv, name="venv")\
                                .with_requirementstxt("reqs1.txt", "reqs2.txt")\
-                               .with_build_path(".")
+                               .with_build_path(build_path)
   variations:
     Just from files:
       steps:
@@ -61,9 +61,19 @@ Project virtualenv:
       steps:
       - Run: |
           venv = virtualenv.with_packages("python-slugify==1.2.3")
+
           venv.ensure_built()
           
           assert "1.2.3" in venv.bin.python(
+              "-c",
+              "import slugify ; print(slugify.__version__)"
+          ).output()
+
+      - Run: |
+          venv = virtualenv.with_packages("python-slugify==1.2.4")
+          venv.ensure_built()
+
+          assert "1.2.4" in venv.bin.python(
               "-c",
               "import slugify ; print(slugify.__version__)"
           ).output()

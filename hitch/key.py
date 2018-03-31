@@ -34,12 +34,21 @@ class Engine(BaseEngine):
 
     def set_up(self):
         """Set up your applications and the test environment."""
+        self.path.cachestate = self.path.gen.joinpath("cachestate")
         self.path.state = self.path.gen.joinpath("state")
         self.path.working_dir = self.path.gen.joinpath("working")
+        self.path.build_path = self.path.gen.joinpath("build_path")
 
         if self.path.state.exists():
             self.path.state.rmtree(ignore_errors=True)
         self.path.state.mkdir()
+
+        if self.path.build_path.exists():
+            self.path.build_path.rmtree(ignore_errors=True)
+        self.path.build_path.mkdir()
+
+        if not self.path.cachestate.exists():
+            self.path.cachestate.mkdir()
 
         for filename, contents in self.given.get('files', {}).items():
             filepath = self.path.state.joinpath(filename)
@@ -73,7 +82,11 @@ class Engine(BaseEngine):
         self.example_py_code = ExamplePythonCode(self.python, self.path.state)\
             .with_setup_code(self.given.get('setup', ''))\
             .with_terminal_size(160, 100)\
-            .with_long_strings(pyenv_version=self.given.get("pyenv_version"))
+            .with_long_strings(
+                pyenv_version=self.given.get("pyenv_version"),
+                share=str(self.path.cachestate),
+                build_path=str(self.path.build_path),
+            )
 
     def run(self, code):
         self.example_py_code.with_code(code).run()
@@ -167,11 +180,29 @@ def lint():
     print("Lint success!")
 
 
+def cleancache():
+    """
+    Clean the cache state.
+    """
+    DIR.gen.joinpath("cachestate").rmtree(ignore_errors=True)
+    print("Done")
+
+
 def hitch(*args):
     """
     Use 'h hitch --help' to get help on these commands.
     """
     hitch_maintenance(*args)
+
+
+def rerun(version="3.5.0"):
+    """
+    Rerun last example code block with specified version of python.
+    """
+    Command(DIR.gen.joinpath("py{0}".format(version), "bin", "python"))(
+        DIR.gen.joinpath("state", "examplepythoncode.py")
+    ).in_dir(DIR.gen.joinpath("state")).run()
+
 
 
 def deploy(version):
