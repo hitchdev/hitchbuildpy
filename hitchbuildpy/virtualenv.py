@@ -3,7 +3,6 @@ from pathquery import pathquery
 from path import Path
 from copy import copy
 import hitchbuild
-import hashlib
 
 
 class VirtualenvBuild(hitchbuild.HitchBuild):
@@ -97,4 +96,3 @@ class PyLibrary(VirtualenvBuild):
         if self._library_src.changes:
             self.bin.pip("uninstall", "-y", self._module_name).ignore_errors().run()
             self.bin.pip("install", ".").in_dir(self._library_src_path).run()
-

@@ -204,7 +204,6 @@ def rerun(version="3.5.0"):
     ).in_dir(DIR.gen.joinpath("state")).run()
 
 
-
 def deploy(version):
     """
     Deploy to pypi as specified version.
