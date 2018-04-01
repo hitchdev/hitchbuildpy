@@ -47,7 +47,15 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
             self.basepath.rmtree(ignore_errors=True)
 
     def fingerprint(self):
-        return str(hash((tuple(self._packages), tuple(self._reqstxt))))
+        if hasattr(self, '_packages'):
+            packages = self._packages if self._packages is not None else []
+        else:
+            packages = []
+        if hasattr(self, '_reqstxt'):
+            reqstxt = self._reqstxt if self._reqstxt is not None else []
+        else:
+            reqstxt = []
+        return str(hash((tuple(packages), tuple(reqstxt))))
 
     @property
     def requirements_changed(self):
