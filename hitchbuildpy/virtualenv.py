@@ -92,11 +92,11 @@ class PyLibrary(VirtualenvBuild):
     def __init__(self, base_python, module_name, library_src):
         self.base_python = self.as_dependency(base_python)
         self._module_name = module_name
-        self._library_src_path = Path(library_src)
+        self._library_src_path = Path(library_src).abspath()
         self._library_src = self.from_source(
             "library",
             list(pathquery(self._library_src_path.joinpath(module_name))) + \
-            ["setup.py",]
+            [self._library_src_path.joinpath("setup.py"),]
         )
         self._name = module_name
         self._packages = []
