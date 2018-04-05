@@ -30,6 +30,7 @@ Python Library Source Virtualenv:
       import hitchbuildpy
 
       pylibrary = hitchbuildpy.PyLibrary(
+          name="mylibrary",
           base_python=hitchbuildpy.PyenvBuild("3.5.0").with_build_path(share),
           module_name="foo",
           library_src="."

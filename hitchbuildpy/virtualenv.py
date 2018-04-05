@@ -89,7 +89,7 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
 
 
 class PyLibrary(VirtualenvBuild):
-    def __init__(self, base_python, module_name, library_src):
+    def __init__(self, name, base_python, module_name, library_src):
         self.base_python = self.as_dependency(base_python)
         self._module_name = module_name
         self._library_src_path = Path(library_src).abspath()
@@ -98,7 +98,7 @@ class PyLibrary(VirtualenvBuild):
             list(pathquery(self._library_src_path.joinpath(module_name))) + \
             [self._library_src_path.joinpath("setup.py"),]
         )
-        self._name = module_name
+        self._name = name
         self._packages = []
         self._requirementstxt = None
         self._package_monitor = None
