@@ -55,7 +55,7 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
             reqstxt = self._reqstxt if self._reqstxt is not None else []
         else:
             reqstxt = []
-        return str(hash((tuple(packages), tuple(reqstxt))))
+        return {"packages": packages, "reqstxt": reqstxt}
 
     @property
     def requirements_changed(self):
@@ -95,8 +95,8 @@ class PyLibrary(VirtualenvBuild):
         self._library_src_path = Path(library_src).abspath()
         self._library_src = self.from_source(
             "library",
-            list(pathquery(self._library_src_path.joinpath(module_name))) + \
-            [self._library_src_path.joinpath("setup.py"),]
+            list(pathquery(self._library_src_path.joinpath(module_name))) +
+            [self._library_src_path.joinpath("setup.py"), ]
         )
         self._name = name
         self._packages = []
