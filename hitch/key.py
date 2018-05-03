@@ -13,6 +13,9 @@ from hitchrunpy import ExamplePythonCode, ExpectedExceptionMessageWasDifferent
 from templex import Templex, NonMatching
 
 
+git = Command("git").in_dir(DIR.project)
+
+
 class Engine(BaseEngine):
     """Python engine for running tests."""
 
@@ -204,12 +207,42 @@ def rerun(version="3.5.0"):
     ).in_dir(DIR.gen.joinpath("state")).run()
 
 
+def updatepyenv():
+    """
+    git clone pyenv and update.
+    """
+    print("Updating from git...")
+    pyenv_dir = DIR.gen/"pyenv"
+
+    if pyenv_dir.exists():
+        git("pull").in_dir(pyenv_dir).run()
+    else:
+        git("clone", "https://github.com/pyenv/pyenv.git").in_dir(DIR.gen).run()
+
+    print("Copying...")
+    pybin = DIR.project/"hitchbuildpy"/"bin"
+    pyshare = DIR.project/"hitchbuildpy"/"share"
+
+    if pybin.exists():
+        pybin.rmtree()
+    pybin.mkdir()
+    if pyshare.exists():
+        pyshare.rmtree()
+
+    py_build_dir = pyenv_dir/"plugins"/"python-build"
+    py_build_dir.joinpath("bin", "python-build").copy(pybin/"python-build")
+    py_build_dir.joinpath("share").copytree(pyshare)
+
+    DIR.project.joinpath("hitchbuildpy", "pyenv-commit-hash").write_text(
+        git("rev-parse", "HEAD").in_dir(pyenv_dir).output().rstrip()
+    )
+
+
 def deploy(version):
     """
     Deploy to pypi as specified version.
     """
     NAME = "hitchbuildpy"
-    git = Command("git").in_dir(DIR.project)
     version_file = DIR.project.joinpath("VERSION")
     old_version = version_file.bytes().decode('utf8')
     if version_file.bytes().decode("utf8") != version:

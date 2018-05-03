@@ -1,4 +1,5 @@
 from commandlib import CommandPath, Command
+from distutils.version import StrictVersion
 from path import Path
 import hitchbuild
 
@@ -6,6 +7,7 @@ import hitchbuild
 class PyenvBuild(hitchbuild.HitchBuild):
     def __init__(self, version):
         self.version = version
+        self.sversion = StrictVersion(version)
 
     @property
     def basepath(self):
@@ -29,8 +31,11 @@ class PyenvBuild(hitchbuild.HitchBuild):
                 Path(__file__).dirname().abspath().joinpath("bin", "python-build")
             )(self.version, self.basepath).run()
 
-            self.bin.easy_install("--upgrade", "setuptools").run()
-            self.bin.easy_install("--upgrade", "pip").run()
+            if StrictVersion(self.version) < StrictVersion("3.6.0"):
+                self.bin.easy_install("--upgrade", "setuptools").run()
+                self.bin.easy_install("--upgrade", "pip").run()
+            else:
+                self.bin.pip("install", "pip", "--upgrade").run()
             self.bin.pip("install", "virtualenv", "--upgrade")\
                     .without_env("PIP_REQUIRE_VIRTUALENV").run()
         self.verify()

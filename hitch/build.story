@@ -1,24 +1,31 @@
 Build python:
   given:
+    pyenv_version: 3.6.0
     setup: |
       import hitchbuildpy
 
-      pyenv = hitchbuildpy.PyenvBuild("3.5.0").with_build_path(".")
+      pyenv = hitchbuildpy.PyenvBuild(pyenv_version).with_build_path(".")
 
-Build pyenv:
+
+Build pyenv 3.6:
   based on: build python
   steps:
   - Run: |
       pyenv.ensure_built()
-      assert "3.5.0" in pyenv.bin.python("--version").output()
+      assert pyenv_version in pyenv.bin.python("--version").output()
 
+Build pyenv 3.5:
+  based on: build pyenv 3.6
+  given:
+    pyenv_version: 3.5.0
+      
 Build virtualenv:
   based on: build python
   steps:
   - Run: |
       virtualenv = hitchbuildpy.VirtualenvBuild(pyenv, name="venv").with_build_path(".")
       virtualenv.ensure_built()
-      assert "3.5.0" in virtualenv.bin.python("--version").output()
+      assert pyenv_version in virtualenv.bin.python("--version").output()
 
 Build virtualenv from requirements.txt:
   based on: build python
