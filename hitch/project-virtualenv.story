@@ -3,7 +3,7 @@ Project virtualenv:
   description: |
     Build a project based virtualenv to run something like Django.
   given:
-    pyenv_version: 3.5.0
+    pyenv_version: 3.7-dev
     files:
       reqs1.txt: |
         python-slugify==1.2.2

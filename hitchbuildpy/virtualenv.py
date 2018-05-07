@@ -83,7 +83,7 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
                     self.bin.pip("install", package).run()
 
     def verify(self):
-        assert self.base_python.version in self.bin.python(
+        assert self.base_python.version.replace("-dev", "") in self.bin.python(
             "-c", "import sys ; sys.stdout.write(sys.version)"
         ).output()
 
