@@ -18,7 +18,21 @@ Build pyenv 3.5:
   based on: build pyenv 3.6
   given:
     pyenv_version: 3.5.0
-      
+    
+
+Build pyenv dev:
+  given:
+    setup: |
+      import hitchbuildpy
+
+      pyenv = hitchbuildpy.PyenvBuild(pyenv_version).with_build_path(".")
+    pyenv_version: 3.7-dev
+  steps:
+  - Run: |
+      pyenv.ensure_built()
+      assert "3.7" in pyenv.bin.python("--version").output()
+
+
 Build virtualenv:
   based on: build python
   steps:
