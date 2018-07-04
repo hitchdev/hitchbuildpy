@@ -23,7 +23,8 @@ class PyenvBuild(hitchbuild.HitchBuild):
         self.basepath.rmtree(ignore_errors=True)
 
     def build(self):
-        if not self.basepath.exists():
+        if not self.basepath.exists() or self.last_run_had_exception:
+            self.basepath.rmtree(ignore_errors=True)
             self.basepath.mkdir()
 
             Command(
