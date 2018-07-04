@@ -69,6 +69,9 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
             return False
 
     def build(self):
+        if self.last_run_had_exception:
+            self.basepath.rmtree(ignore_errors=True)
+
         if not self.basepath.exists():
             self.basepath.mkdir()
             self.base_python.bin.virtualenv(self.basepath).run()
