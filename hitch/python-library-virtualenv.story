@@ -1,5 +1,5 @@
 Python Library Source Virtualenv:
-  description: |
+  about: |
     Build a virtualenv that installs python library source code.
   given:
     pyenv_version: 3.5.0

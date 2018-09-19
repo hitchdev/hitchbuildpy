@@ -5,4 +5,3 @@ pudb
 psutil
 sure
 commandlib
-hitchpython

@@ -1,16 +1,16 @@
-from hitchstory import StoryCollection, StorySchema, BaseEngine
-from hitchstory import expected_exception, validate, HitchStoryException
+from hitchstory import StoryCollection, BaseEngine
+from hitchstory import no_stacktrace_for, validate, HitchStoryException
+from hitchstory import GivenDefinition, GivenProperty, InfoDefinition, InfoProperty
 from hitchrun import expected
 from strictyaml import Str, MapPattern, Optional, Float
-from pathquery import pathq
+from pathquery import pathquery
 from commandlib import run, Command
-import hitchpython
-import hitchtest
 from commandlib import python
 from hitchrun import hitch_maintenance
 from hitchrun import DIR
 from hitchrunpy import ExamplePythonCode, ExpectedExceptionMessageWasDifferent
-from templex import Templex, NonMatching
+from templex import Templex
+import hitchpylibrarytoolkit
 
 
 git = Command("git").in_dir(DIR.project)
@@ -18,17 +18,11 @@ git = Command("git").in_dir(DIR.project)
 
 class Engine(BaseEngine):
     """Python engine for running tests."""
-
-    schema = StorySchema(
-        given={
-            Optional("setup"): Str(),
-            Optional("code"): Str(),
-            Optional("files"): MapPattern(Str(), Str()),
-            Optional("pyenv_version"): Str(),
-        },
-        info={
-            Optional("about"): Str(),
-        }
+    given_definition = GivenDefinition(
+        setup=GivenProperty(Str()),
+        code=GivenProperty(Str()),
+        files=GivenProperty(MapPattern(Str(), Str())),
+        pyenv_version=GivenProperty(Str())
     )
 
     def __init__(self, paths, settings):
@@ -63,24 +57,11 @@ class Engine(BaseEngine):
             self.path.working_dir.rmtree(ignore_errors=True)
         self.path.working_dir.mkdir()
 
-        self.python_package = hitchpython.PythonPackage(
-            self.given.get('python_version', '3.5.0')
-        )
-        self.python_package.build()
-
-        self.pip = self.python_package.cmd.pip
-        self.python = self.python_package.cmd.python
-
-        # Install debugging packages
-        with hitchtest.monitor([self.path.key.joinpath("debugrequirements.txt")]) as changed:
-            if changed:
-                run(self.pip("install", "-r", "debugrequirements.txt").in_dir(self.path.key))
-
-        # Uninstall and reinstall
-        with hitchtest.monitor(pathq(self.path.project.joinpath("hitchbuildpy"))) as changed:
-            if changed:
-                self.pip("uninstall", "hitchbuildpy", "-y").ignore_errors().run()
-                self.pip("install", ".").in_dir(self.path.project).run()
+        self.python = hitchpylibrarytoolkit.project_build(
+            "hitchbuildpy",
+            self.path,
+            "3.5.0",
+        ).bin.python
 
         self.example_py_code = ExamplePythonCode(self.python, self.path.state)\
             .with_setup_code(self.given.get('setup', ''))\
@@ -94,7 +75,7 @@ class Engine(BaseEngine):
     def run(self, code):
         self.example_py_code.with_code(code).run()
 
-    @expected_exception(NonMatching)
+    @no_stacktrace_for(AssertionError)
     def output_ends_with(self, contents):
         Templex(contents).assert_match(self.result.output.split('\n')[-1])
 
@@ -130,7 +111,7 @@ def bdd(*words):
     Run story with words.
     """
     StoryCollection(
-        pathq(DIR.key).ext("story"), Engine(DIR, {"rewrite": True})
+        pathquery(DIR.key).ext("story"), Engine(DIR, {"rewrite": True})
     ).shortcut(*words).play()
 
 
@@ -140,7 +121,7 @@ def testfile(filename):
     Run all stories in filename 'filename'.
     """
     StoryCollection(
-        pathq(DIR.key).ext("story"), Engine(DIR, {"rewrite": True})
+        pathquery(DIR.key).ext("story"), Engine(DIR, {"rewrite": True})
     ).in_filename(filename).ordered_by_name().play()
 
 
@@ -150,7 +131,7 @@ def regression():
     """
     lint()
     results = StoryCollection(
-        pathq(DIR.key).ext("story"), Engine(DIR, {})
+        pathquery(DIR.key).ext("story"), Engine(DIR, {})
     ).ordered_by_name().play()
     print(results.report())
 
@@ -161,7 +142,7 @@ def rewriteall():
     """
     print(
         StoryCollection(
-            pathq(DIR.key).ext("story"), Engine(DIR, {"rewrite": True})
+            pathquery(DIR.key).ext("story"), Engine(DIR, {"rewrite": True})
         ).ordered_by_name().play().report()
     )
 

@@ -1,6 +1,6 @@
 Project virtualenv:
   based on: build python
-  description: |
+  about: |
     Build a project based virtualenv to run something like Django.
   given:
     pyenv_version: 3.7-dev
