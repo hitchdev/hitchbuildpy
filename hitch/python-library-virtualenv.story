@@ -1,8 +1,8 @@
 Python Library Source Virtualenv:
   about: |
-    Build a virtualenv that installs python library source code.
+    Builds a virtualenv that will pip -e a library.
   given:
-    pyenv_version: 3.5.0
+    pyenv_version: 3.7.0
     files:
       setup.py: |
         from distutils.core import setup
@@ -29,12 +29,12 @@ Python Library Source Virtualenv:
     setup: |
       import hitchbuildpy
 
-      pylibrary = hitchbuildpy.PyLibrary(
-          name="mylibrary",
-          base_python=hitchbuildpy.PyenvBuild("3.5.0").with_build_path(share),
+      virtualenv = hitchbuildpy.VirtualenvBuild(
+          venv="./venvs/py3.5.0",
+          base_python=hitchbuildpy.PyenvBuild(share / "py3.5.0", "3.5.0"),
           module_name="foo",
-          library_src="."
-      ).with_requirementstxt("debugreqs.txt").with_build_path(build_path)
+          src="."
+      ).with_requirementstxt("debugreqs.txt")
   steps:
   - Run: |
       pylibrary.ensure_built()

@@ -60,7 +60,7 @@ class Engine(BaseEngine):
         self.python = hitchpylibrarytoolkit.project_build(
             "hitchbuildpy",
             self.path,
-            "3.5.0",
+            "3.7.0",
         ).bin.python
 
         self.example_py_code = ExamplePythonCode(self.python, self.path.state)\

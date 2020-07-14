@@ -5,31 +5,26 @@ import hitchbuild
 
 
 class PyenvBuild(hitchbuild.HitchBuild):
-    def __init__(self, version):
+    def __init__(self, build_path, version):
+        self.build_path = Path(build_path).abspath()
         self.version = version
-
-    @property
-    def basepath(self):
-        return self.build_path.joinpath("python{0}".format(self.version))
+        self.fingerprint_path = self.build_path / "fingerprint.txt"
 
     @property
     def bin(self):
-        return CommandPath(self.basepath/"bin")
-
-    def fingerprint(self):
-        return str(hash(self.version))
+        return CommandPath(self.build_path / "bin")
 
     def clean(self):
-        self.basepath.rmtree(ignore_errors=True)
+        self.build_path.rmtree(ignore_errors=True)
 
     def build(self):
-        if not self.basepath.exists() or self.last_run_had_exception:
-            self.basepath.rmtree(ignore_errors=True)
-            self.basepath.mkdir()
+        if self.incomplete():
+            self.build_path.rmtree(ignore_errors=True)
+            self.build_path.mkdir()
 
             Command(
                 Path(__file__).dirname().abspath().joinpath("bin", "python-build")
-            )(self.version, self.basepath).run()
+            )(self.version, self.build_path).run()
 
             if LooseVersion(self.version) < LooseVersion("3.6.0"):
                 self.bin.easy_install("--upgrade", "setuptools").run()
@@ -38,7 +33,8 @@ class PyenvBuild(hitchbuild.HitchBuild):
                 self.bin.pip("install", "pip", "--upgrade").run()
             self.bin.pip("install", "virtualenv", "--upgrade")\
                     .without_env("PIP_REQUIRE_VIRTUALENV").run()
-        self.verify()
+            self.verify()
+            self.refingerprint()
 
     def verify(self):
         version_to_check = self.version.replace("-dev", "")

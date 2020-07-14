@@ -6,87 +6,60 @@ import hitchbuild
 
 
 class VirtualenvBuild(hitchbuild.HitchBuild):
-    def __init__(self, base_python, name=None):
-        self.base_python = self.as_dependency(base_python)
-        self._name = name
+    def __init__(self, build_path, base_python):
+        self.build_path = Path(build_path).abspath()
+        self.fingerprint_path = self.build_path / "fingerprint.txt"
+        self.base_python = self.dependency(base_python)
         self._requirementstxt = None
-        self._packages = None
-        self._package_monitor = None
-
-    @property
-    def name(self):
-        return self._name
+        self._extra_packages = None
 
     @property
     def bin(self):
-        return CommandPath(self.basepath.joinpath("bin"))
-
-    @property
-    def basepath(self):
-        return self.build_path.joinpath(self.name)
+        return CommandPath(self.build_path / "bin")
 
     def with_packages(self, *packages):
         new_venv = copy(self)
         # TODO: Prevent accidental use of self instead of new_venv
-        new_venv._package_monitor = new_venv.monitored_vars(packages=packages)
-        new_venv._packages = packages
+        new_venv._extra_packages = self.variable("extra_packages", packages)
         return new_venv
 
     def with_requirementstxt(self, *paths):
         new_venv = copy(self)
         # TODO: Prevent accidental use of self instead of new_venv
-        new_venv._requirementstxt = new_venv.from_source(
+        new_venv._requirementstxt = new_venv.source(
             "requirementstxt",
             [Path(path).abspath() for path in paths]
         )
-        new_venv._reqstxt = [Path(path).abspath() for path in paths]
         return new_venv
 
     def clean(self):
-        if self.basepath.exists():
-            self.basepath.rmtree(ignore_errors=True)
-
-    def fingerprint(self):
-        if hasattr(self, '_packages'):
-            packages = self._packages if self._packages is not None else []
-        else:
-            packages = []
-        if hasattr(self, '_reqstxt'):
-            reqstxt = self._reqstxt if self._reqstxt is not None else []
-        else:
-            reqstxt = []
-        return {"packages": packages, "reqstxt": reqstxt}
-
-    @property
-    def requirements_changed(self):
-        if self._requirementstxt is not None:
-            if self._requirementstxt.changes:
-                return True
-        if self._package_monitor is not None:
-            if self._package_monitor.changes:
-                return True
-        else:
-            return False
+        self.build_path.rmtree(ignore_errors=True)
 
     def build(self):
-        if self.last_run_had_exception:
-            self.basepath.rmtree(ignore_errors=True)
-
-        if not self.basepath.exists():
-            self.basepath.mkdir()
-            self.base_python.bin.virtualenv(self.basepath).run()
+        if self.incomplete():
+            self.build_path.rmtree(ignore_errors=True)
+            self.build_path.mkdir()
+            self.base_python.build.ensure_built()
+            self.base_python.build.bin.virtualenv(self.build_path).run()
             self.verify()
+            self.refingerprint()
 
-        if self.requirements_changed:
-            if self._requirementstxt is not None:
-                for requirementstxt in self._reqstxt:
-                    self.bin.pip("install", "-r", requirementstxt).run()
-            if self._packages is not None:
-                for package in self._packages:
+        import q
+        if self._requirementstxt is not None:
+            q(self._requirementstxt)
+            if self._requirementstxt.changed:
+                for filename in self._requirementstxt.value:
+                    self.bin.pip("install", "-r", filename).run()
+                    self.refingerprint()
+
+        if self._extra_packages is not None:
+            if self._extra_packages.changed:
+                for package in self._extra_packages.value:
                     self.bin.pip("install", package).run()
+                    self.refingerprint()
 
     def verify(self):
-        assert self.base_python.version.replace("-dev", "") in self.bin.python(
+        assert self.base_python.build.version.replace("-dev", "") in self.bin.python(
             "-c", "import sys ; sys.stdout.write(sys.version)"
         ).output()
 
