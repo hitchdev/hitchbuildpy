@@ -54,14 +54,16 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
             self.refingerprint()
         else:
             if self._requirementstxt is not None:
-                for filename in self._requirementstxt._filenames:
-                    self.bin.pip("install", "-r", filename).run()
-                self.refingerprint()
+                if self._requirementstxt.changed:
+                    for filename in self._requirementstxt._filenames:
+                        self.bin.pip("install", "-r", filename).run()
+                    self.refingerprint()
 
             if self._extra_packages is not None:
-                for package in self._extra_packages.value:
-                    self.bin.pip("install", package).run()
-                self.refingerprint()
+                if self._extra_packages.changed:
+                    for package in self._extra_packages.value:
+                        self.bin.pip("install", package).run()
+                    self.refingerprint()
 
     def verify(self):
         assert self.base_python.build.version.replace("-dev", "") in self.bin.python(
