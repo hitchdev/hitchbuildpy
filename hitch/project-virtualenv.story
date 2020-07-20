@@ -3,26 +3,26 @@ Project virtualenv:
   about: |
     Build a project based virtualenv to run something like Django.
   given:
-    pyenv_version: 3.7-dev
+    pyenv_version: 3.7.0
     files:
       reqs1.txt: |
         python-slugify==1.2.2
       reqs2.txt: |
         humanize==0.5.0
     setup: |
+      from path import Path
       import hitchbuildpy
 
-      pyenv = hitchbuildpy.PyenvBuild(pyenv_version).with_build_path(share)
+      pyenv = hitchbuildpy.PyenvBuild(Path(share) / "python-{}".format(pyenv_version), pyenv_version)
 
-      virtualenv = hitchbuildpy.VirtualenvBuild(pyenv, name="venv")\
-                               .with_requirementstxt("reqs1.txt", "reqs2.txt")\
-                               .with_build_path(build_path)
+      virtualenv = hitchbuildpy.VirtualenvBuild(Path(build_path) / "venv", pyenv)\
+                               .with_requirementstxt("../reqs1.txt", "../reqs2.txt")
   variations:
     Just from files:
       steps:
       - Run: |
           virtualenv.ensure_built()
-          
+
           assert "1.2.2" in virtualenv.bin.python(
               "-c",
               "import slugify ; print(slugify.__version__)"

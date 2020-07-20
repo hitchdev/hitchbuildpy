@@ -1,10 +1,10 @@
 from hitchstory import StoryCollection, BaseEngine
 from hitchstory import no_stacktrace_for, validate, HitchStoryException
-from hitchstory import GivenDefinition, GivenProperty, InfoDefinition, InfoProperty
+from hitchstory import GivenDefinition, GivenProperty
 from hitchrun import expected
-from strictyaml import Str, MapPattern, Optional, Float
+from strictyaml import Str, MapPattern, Float
 from pathquery import pathquery
-from commandlib import run, Command
+from commandlib import Command
 from commandlib import python
 from hitchrun import hitch_maintenance
 from hitchrun import DIR
@@ -60,7 +60,7 @@ class Engine(BaseEngine):
         self.python = hitchpylibrarytoolkit.project_build(
             "hitchbuildpy",
             self.path,
-            "3.5.0",
+            "3.7.0",
         ).bin.python
 
         self.example_py_code = ExamplePythonCode(self.python, self.path.state)\
