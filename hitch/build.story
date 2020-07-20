@@ -39,7 +39,7 @@ Build virtualenv from requirements.txt:
 
       virtualenv = hitchbuildpy.VirtualenvBuild("./venv", pyenv)\
                                .with_requirementstxt("../reqs.txt")
-      virtualenv.ensure_built()
+                               .with_requirementstxt("reqs.txt")
   steps:
   - Run: |
       assert "1.2.2" in virtualenv.bin.python(
