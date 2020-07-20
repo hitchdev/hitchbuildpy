@@ -20,7 +20,7 @@ class VirtualenvBuild(hitchbuild.HitchBuild):
     def with_packages(self, *packages):
         new_venv = copy(self)
         # TODO: Prevent accidental use of self instead of new_venv
-        new_venv._extra_packages = self.variable("extra_packages", packages)
+        new_venv._extra_packages = new_venv.variable("extra_packages", packages)
         return new_venv
 
     def with_requirementstxt(self, *paths):
